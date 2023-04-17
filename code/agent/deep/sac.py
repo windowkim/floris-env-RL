@@ -38,9 +38,9 @@ class SACAgent(Agent):
         self._memory = ReplayBuffer(buffer_size, self._device)
 
         # action rescaling
-        self._action_scale = torch.Tensor(
+        self._action_scale = torch.tensor(
             (self._env.action_space.high - self._env.action_space.low) / 2., device=self._device)
-        self._action_bias = torch.Tensor(
+        self._action_bias = torch.tensor(
             (self._env.action_space.high + self._env.action_space.low) / 2., device=self._device)
 
         self.q1 = Critic(self.observation_shape,
@@ -93,25 +93,25 @@ class SACAgent(Agent):
         self._tune = tune_alpha
         if self._tune:
             if target_entropy is None:
-                self._target_entropy = -torch.prod(torch.Tensor(env.action_space.shape, device=self._device)).item()
+                self._target_entropy = -torch.prod(torch.tensor(env.action_space.shape, device=self._device)).item()
             else:
                 self._target_entropy = target_entropy
-            self._log_alpha = torch.log(torch.Tensor([init_alpha], device=self._device)).requires_grad_(True)
+            self._log_alpha = torch.log(torch.tensor([init_alpha], device=self._device)).requires_grad_(True)
             self._alpha_optimizer = optim.Adam([self._log_alpha], lr=learning_rate_alpha)
         else:
-            self._alpha = torch.Tensor([init_alpha], device=self._device)
+            self._alpha = torch.tensor([init_alpha], device=self._device)
 
         self._target_update_frequency = target_update_frequency
         self._tau = polyak_tau
 
-        self._q_loss = torch.Tensor([0.0], device=self._device)
-        self._pi_loss = torch.Tensor([0.0], device=self._device)
-        self._alpha_loss = torch.Tensor([0.0], device=self._device)
+        self._q_loss = torch.tensor([0.0], device=self._device)
+        self._pi_loss = torch.tensor([0.0], device=self._device)
+        self._alpha_loss = torch.tensor([0.0], device=self._device)
 
     def find_action(self, observation, in_eval=False):
         with torch.no_grad():
             a, _ = self.pi(
-                torch.Tensor(observation, device=self._device),
+                torch.tensor(observation, dtype = torch.float32, device=self._device),
                 deterministic=in_eval, with_logprob=False
             )
         return a.tolist()

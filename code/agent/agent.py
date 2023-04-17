@@ -7,6 +7,9 @@ import numpy as np
 import progressbar
 from gym.spaces import Box, Discrete
 from torch.utils.tensorboard import SummaryWriter
+from matplotlib import animation
+import matplotlib.pyplot as plt
+from collections import deque
 
 
 class Agent(ABC):
@@ -37,10 +40,28 @@ class Agent(ABC):
     def get_log_dict(self):
         return {}
 
+    def save_frames_as_gif(self, frames, fps=60, path='/home/windowkim/WF-sim-real/', filename='farm_animation.gif'):
+
+        #Mess with this to change frame size
+        plt.figure(figsize=(frames[0].shape[1] / 72.0, frames[0].shape[0] / 72.0), dpi=72)
+
+        patch = plt.imshow(frames[0])
+        plt.axis('off')
+
+        def animate(i):
+            patch.set_data(frames[i])
+
+        anim = animation.FuncAnimation(plt.gcf(), animate, frames = len(frames), interval=50)
+        anim.save(path + filename, writer='imagemagick', fps=fps)
+
     def run(
             self,
             total_steps: int = 10000,
             render: bool = False,
+            render_every: int = 1,
+            render_fps: int = 60,
+            render_len: int = 300,
+            render_filename: str ='farm_animation.gif',
             rescale_rewards: bool = True,
             reward_range: Optional[Tuple[float, float]] = None,
             log: bool = True,
@@ -71,10 +92,15 @@ class Agent(ABC):
         log_reward = 0.0
         observation = self._env.reset()
         env_log_exists = hasattr(self._env, 'get_log_dict') and callable(getattr(self._env, 'get_log_dict'))
+        
+        # To save training gif
+        frames = deque(maxlen=render_len)
         for global_step in progressbar.progressbar(range(total_steps)):
             if not eval_only:
                 action = self.find_action(observation)
                 do_logging = log and (global_step + 1) % log_every == 0
+                do_renderring = render and (global_step + 1) % render_every == 0
+
 
                 if do_logging:
                     if env_log_exists:
@@ -106,8 +132,9 @@ class Agent(ABC):
 
                 self.learn(old_observation, action, reward, observation, global_step)
 
-                if render:
-                    self._env.render()
+                if do_renderring:
+                    frames.append(self._env.render(mode="rgb_array"))
+                    # self._env.render()
 
             if do_eval and (global_step + 1) % eval_every == 0:
                 # evaluate the agent
@@ -119,6 +146,9 @@ class Agent(ABC):
                 self._log_value('eval/std', np.std(eval_rewards), writer, global_step)
                 for reward, i in zip(eval_rewards, range(len(eval_rewards))):
                     self._log_value(f'eval/reward_{i}', reward, writer, global_step)
+        
+        # save gif
+        self.save_frames_as_gif(list(frames), render_fps,filename=render_filename)
 
     def _eval(self, env: Env, eval_steps):
         observation = env.reset()

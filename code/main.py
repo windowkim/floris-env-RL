@@ -3,6 +3,9 @@ import random
 import sys
 import os
 import yaml
+from pyvirtualdisplay import Display
+display1 = Display(visible=False, size=(400, 300))
+display1.start()
 from gym.wrappers import TimeLimit
 
 from agent import NaiveAgent, FlorisAgent, SACAgent, TD3Agent
@@ -37,6 +40,7 @@ def run(config, seed):
     # Generate the wind data and save it. If the data already exists, load previously generated data instead
     print("Retrieving the wind data...")
     if config.get('wind_process') is not None:
+        print('wind_process is exist')
         # Check the directory
         data_path = os.path.join(directory, 'wind_data')
         if not os.path.exists(data_path):
@@ -47,6 +51,7 @@ def run(config, seed):
 
         # If the wind process is MVOU, read it
         if wind_config.get('type', None) == 'mvou':
+            
             # Read the existing data
             eval_processes = [
                 MVOUWindProcess.switch_to_csv(
@@ -65,12 +70,40 @@ def run(config, seed):
                 properties=wind_config.get('properties', None),
                 seed=data_generation_train_seed
             )
+        elif wind_config.get('type', None) == 'uniform':
+            # Uniform process, constant wind will be used from default_floris_input.json -> 7m/s, 270 degrees
+            eval_processes, train_process = None, None
+        
         else:
             # If you want to use a non-MVOU process, implement it here
             raise NotImplementedError
     else:
-        # In case there are no wind processes, constant wind will be used
-        eval_process, train_process = None, None
+        # wind  process is none, then find user wind data
+        # Check the directory
+        data_path = os.path.join('./configs/', 'wind_data')
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
+        print(data_path)
+        wind_config = config.get('wind_process', {})
+        eval_processes = [
+                MVOUWindProcess.switch_to_csv(
+                    os.path.join(data_path, f'evaluation_data_uniform_{i}.csv'),
+                    time_steps=eval_steps,
+                    time_delta=time_delta,
+                    properties=wind_config.get('properties', None),
+                    seed=data_generation_eval_seeds[i]
+                )
+                for i in range(n_eval_env)
+                ]
+        train_process = MVOUWindProcess.switch_to_csv(
+                os.path.join(data_path, 'training_data_uniform.csv'),
+                time_steps=training_steps,
+                time_delta=time_delta,
+                properties=wind_config.get('properties', None),
+                seed=data_generation_train_seed
+            )
+        # # In case there are no wind processes, constant wind will be used
+        # eval_process, train_process = None, None
 
     # Create the environments using the wind processes generated earlier
     print("Setting  up the environments...")
@@ -78,10 +111,13 @@ def run(config, seed):
     # time_delta is stored separately in the config because it is needed by both the wind process and the env
     env_config['time_delta'] = time_delta
     train_env = TimeLimit(WindFarmEnv(wind_process=train_process, **env_config), training_steps)
-    eval_envs = [
-        TimeLimit(WindFarmEnv(wind_process=eval_process, **env_config), eval_steps)
-        for eval_process in eval_processes
-    ]
+    if eval_processes is not None:
+        eval_envs = [
+            TimeLimit(WindFarmEnv(wind_process=eval_process, **env_config), eval_steps)
+            for eval_process in eval_processes
+        ]
+    else:
+        eval_envs = TimeLimit(WindFarmEnv(wind_process=None, **env_config), eval_steps)
 
     # Make a list of agents, check if their experiment data already exists, and  skip them if it does.
     # If you want to rerun one of the agents in a previous experiment, delete their data from the results
@@ -164,6 +200,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+
+
     # Read the configuration file
     with open(args.config, 'r') as stream:
         try:
@@ -178,4 +216,5 @@ if __name__ == '__main__':
 
     # Run the experiments changing only the seeds
     for seed in seeds:
+        print(f'seed : {seed}')
         run(config, seed)

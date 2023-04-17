@@ -91,14 +91,14 @@ class TD3Agent(Agent):
         self._policy_update_frequency = policy_update_frequency
         self._target_update_frequency = target_update_frequency
         self._tau = polyak_tau
-        self._q_loss = torch.Tensor([0.0], device=self._device)
-        self._pi_loss = torch.Tensor([0.0], device=self._device)
-        self._a_limits = torch.Tensor(self._env.action_space.low, device=self._device),\
-                         torch.Tensor(self._env.action_space.high, device=self._device)
+        self._q_loss = torch.tensor([0.0], device=self._device)
+        self._pi_loss = torch.tensor([0.0], device=self._device)
+        self._a_limits = torch.tensor(self._env.action_space.low, device=self._device),\
+                         torch.tensor(self._env.action_space.high, device=self._device)
 
     def find_action(self, observation, in_eval=False):
         with torch.no_grad():
-            a = self.pi(torch.tensor(observation, dtype=torch.float, device=self._device)).detach().numpy()
+            a = self.pi(torch.tensor(observation, dtype=torch.float, device=self._device)).detach().cpu().numpy()
             if not in_eval:
                 a += np.random.normal(0, self._exploration_noise, size=self.action_shape)
                 a = a.clip(self._env.action_space.low, self._env.action_space.high)
