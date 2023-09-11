@@ -40,6 +40,10 @@ class Agent(ABC):
     def get_log_dict(self):
         return {}
 
+    @abstractmethod
+    def save_model(self, step, directory):
+        pass
+
     def save_frames_as_gif(self, frames, fps=60, path='/home/windowkim/WF-sim-real/', filename='farm_animation.gif'):
 
         #Mess with this to change frame size
@@ -71,7 +75,9 @@ class Agent(ABC):
             eval_steps: Optional[int] = 1000,
             eval_every: Optional[int] = 1000,
             eval_once: bool = False,  # for non-learning agents,
-            eval_only: bool = False  # will repeat evaluations but skip training
+            eval_only: bool = False,  # will repeat evaluations but skip training
+            save_model_every: int = 1000,
+            continue_from: int = 0
     ):
         if rescale_rewards:
             if reward_range is None:
@@ -95,17 +101,23 @@ class Agent(ABC):
         
         # To save training gif
         frames = deque(maxlen=render_len)
-        for global_step in progressbar.progressbar(range(total_steps)):
+        for global_step in progressbar.progressbar(range(continue_from, total_steps)):
             if not eval_only:
                 action = self.find_action(observation)
                 do_logging = log and (global_step + 1) % log_every == 0
                 do_renderring = render and (global_step + 1) % render_every == 0
+                do_saving_model = (global_step + 1) % save_model_every == 0
+
+                if do_saving_model:
+                    self.save_model(global_step, log_directory)
 
 
                 if do_logging:
                     if env_log_exists:
                         self._log_dict(self._env.get_log_dict(), writer, global_step)
                     self._log_dict(self.get_log_dict(), writer, global_step)
+                    velocities = np.array([turbine.average_velocity for turbine in self._env.turbines])
+                    self._log_value('speed_at_turbine',velocities, writer, global_step)
                     self._log_value('observation', observation, writer, global_step)
                     self._log_value('action', action, writer, global_step)
 
@@ -148,7 +160,7 @@ class Agent(ABC):
                     self._log_value(f'eval/reward_{i}', reward, writer, global_step)
         
         # save gif
-        self.save_frames_as_gif(list(frames), render_fps,filename=render_filename)
+        self.save_frames_as_gif(list(frames), render_fps,path=log_directory,filename=render_filename)
 
     def _eval(self, env: Env, eval_steps):
         observation = env.reset()

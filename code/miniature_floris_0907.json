@@ -1,0 +1,143 @@
+{
+  "type": "floris_input",
+  "name": "floris_input_file_Example",
+  "description": "FLORIS Input file for the action representation experiment",
+  "floris_version": "v2.0.0",
+  "logging": {
+    "console": {
+      "enable": true,
+      "level": "INFO"
+    },
+    "file": {
+      "enable": false,
+      "level": "INFO"
+    }
+  },
+  "farm": {
+    "type": "farm",
+    "name": "farm_example_2x2",
+    "description": "Example 2x2 Wind Farm",
+    "properties": {
+      "wind_speed": [
+        6.0
+      ],
+      "wind_direction": [
+        270.0
+      ],
+      "turbulence_intensity": [
+        0.1200284
+      ],
+      "wind_shear": 0.009393269,
+      "specified_wind_height": 0.375,
+      "wind_veer": -0.0253047,
+      "air_density": 1.225,
+      "layout_x": [
+        0.0
+      ],
+      "layout_y": [
+        0.0
+      ],
+      "wind_x": [
+        0
+      ],
+      "wind_y": [
+        0
+      ]
+    }
+  },
+  "turbine": {
+    "type": "turbine",
+    "name": "miniature_turbine",
+    "description": "miniature wind turbine",
+    "properties": {
+      "use_points_on_perimeter": false,
+      "rotor_diameter": 0.225,
+      "hub_height": 0.375,
+      "blade_count": 3,
+      "pP": 1.88,
+      "pT": 1.88,
+      "generator_efficiency": 1.0,
+      "power_thrust_table": {
+        "power": [
+          0.2136123497,
+          0.3040866937,
+          0.2702829015,
+          0.2724454003,
+          0.2763970078,
+          0.2689440432,
+          0.2659086108,
+          0.2793207174,
+          0.270935431,
+          0.2561218883,
+          0.2599416883,
+          0.2380389777,
+          0.2436409925,
+          0.2553824443,
+          0.2803471087,
+          0.2541830314,
+          0.248994686,
+          0.2756977807,
+          0.27416733
+        ],
+        "thrust": [
+          0.9645183933,
+          0.9201264772,
+          0.8628748328,
+          0.86100905,
+          0.8390971568,
+          0.8357095638,
+          0.8345426325,
+          0.8345380232,
+          0.8310903012,
+          0.8254209188,
+          0.8247110937,
+          0.8156032078,
+          0.8150639251,
+          0.814681357,
+          0.8141282465,
+          0.8008285158,
+          0.7977302145,
+          0.7975290261,
+          0.7964426087
+        ],
+        "wind_speed": [
+          4.1013,
+          4.6125,
+          5.47,
+          5.5,
+          5.9282,
+          5.9944,
+          6.0191,
+          6.0192,
+          6.094,
+          6.217,
+          6.2324,
+          6.43,
+          6.4417,
+          6.45,
+          6.462,
+          6.787,
+          6.864,
+          6.869,
+          6.896
+        ]
+      },
+      "blade_pitch": 0.0,
+      "yaw_angle": 0.0,
+      "tilt_angle": 0.0,
+      "TSR": 3.5
+    }
+  },
+  "wake": {
+    "type": "wake",
+    "name": "wake_gauss",
+    "description": "wake",
+    "properties": {
+      "velocity_model": "gauss",
+      "turbulence_model": "crespo_hernandez",
+      "deflection_model": "gauss",
+      "combination_model": "sosfs"
+
+  }
+}
+}

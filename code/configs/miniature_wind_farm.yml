@@ -1,0 +1,68 @@
+name: miniature_farm
+seed:
+  - 230425
+time_delta: 2      # time (in sec) between control events
+train_steps: 100000    # train data length 21000*3 # training steps; 60480 (= 6 * 60 * 24 * 7) is a week of simulation at 10 sec. intervals
+eval_steps: 267      # evaluation data length, 267 # evaluation steps, 8 hours
+n_eval_env: 1         # number of evaluation environments
+eval_every: 40000      # evaluate every 'eval_every' steps
+render: yes            # if 'yes', will show an animation of the wind farm
+render_every: 1000      # how often render image save in gif
+render_fps: 30        # gif fps
+render_len: 30000       # rendering gif maximum length from last
+log: yes              # if 'yes', will log data to a folder specified by 'directory' in Tensorboard format
+log_every: 1         # how often to write logs, once per minute
+directory: data_miniature_uniform_gauss_test_reward       # directory for storing the data and for logging
+rescale_rewards: yes  # in 'yes' rewards are rescaled to be between 0 and 1 based on 'reward_range'
+reward_range: null    # if 'rescale_rewards' is 'yes' but no range is given, the reward range will be inferred
+
+
+  
+
+environment:
+  floris: miniature_floris_test.json
+  turbine_layout:
+    x:
+      - 0.0
+      - 0.9
+      - 1.8
+    y:
+      - 0.0
+      - 0.0
+      - 0.0
+  max_angular_velocity: 1.0
+  desired_yaw_boundaries:
+    - -30.0
+    - 30.0
+  observe_yaws: yes
+  lidar_turbines: ~
+  mast_layout:
+    - [-5.0]
+    - [0.0]
+  normalize_observations: yes
+  action_representation: wind
+
+agents:
+  - name: TD3-wind
+    type: td3
+    parameters:
+      discounting_factor: 0.99
+      batch_size: 128
+      buffer_size: 100000
+      start_learning: 4321
+      learning_rate_actor: 0.001
+      learning_rate_critic: 0.01
+      polyak_tau: 0.05
+      hidden_sizes_s: []
+      hidden_sizes_a: []
+      hidden_sizes_shared:
+        - 128
+        - 128
+      hidden_sizes_actor:
+        - 128
+        - 128
+      policy_noise: 0.2
+      noise_clip: 0.5
+      max_grad_norm: 0.5
+      policy_update_frequency: 60
+      target_update_frequency: 60

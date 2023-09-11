@@ -1,4 +1,6 @@
 from typing import Union, Tuple
+import os
+import pickle
 
 import torch
 import torch.nn as nn
@@ -17,7 +19,7 @@ from .polyak_update import polyak_update
 
 class TD3Agent(Agent):
 
-    def __init__(self, name, env: Env,
+    def __init__(self, name, continue_from, agent_directory, env: Env,
                  discounting_factor: float = 0.99,
                  batch_size: int = 32,
                  buffer_size: int = 50000,
@@ -40,6 +42,8 @@ class TD3Agent(Agent):
         assert isinstance(self._env.action_space, Box), "Action space must be of type Box"
         self._device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self._gamma = discounting_factor
+
+        
         self._memory = ReplayBuffer(buffer_size, self._device)
         self.q1 = Critic(self.observation_shape,
                          self.action_shape,
@@ -77,6 +81,25 @@ class TD3Agent(Agent):
         self.q1_target.load_state_dict(self.q1.state_dict())
         self.q2_target.load_state_dict(self.q2.state_dict())
         self.pi_target.load_state_dict(self.pi.state_dict())
+        
+        if continue_from:
+            load_directory = os.path.join(agent_directory, 'model_weight')
+            with open(os.path.join(load_directory, f'replaybuffer_{continue_from}.p'), 'rb') as file:
+                while True:
+                    try:
+                        data = pickle.load(file)
+                    except EOFError:
+                        break
+                    self._memory._buffer = data.copy()
+                print(f'Replay buffer size: {self._memory.size()}')
+            self.q1.load_state_dict(torch.load(os.path.join(load_directory, f'q1_{continue_from}.pth')))
+            self.q2.load_state_dict(torch.load(os.path.join(load_directory, f'q2_{continue_from}.pth')))
+            self.q1_target.load_state_dict(torch.load(os.path.join(load_directory, f'q1_target_{continue_from}.pth')))
+            self.q2_target.load_state_dict(torch.load(os.path.join(load_directory, f'q2_target_{continue_from}.pth')))
+            self.pi.load_state_dict(torch.load(os.path.join(load_directory, f'pi_{continue_from}.pth')))
+            self.pi_target.load_state_dict(torch.load(os.path.join(load_directory, f'pi_target_{continue_from}.pth')))
+            
+        
         self.q1_target.train(False)
         self.q2_target.train(False)
         self.pi_target.train(False)
@@ -145,3 +168,17 @@ class TD3Agent(Agent):
             'loss/q_loss': self._q_loss.item(),
             'loss/pi_loss': self._pi_loss.item()
         }
+
+    def save_model(self, step, directory):
+        save_directory = os.path.join(directory, 'model_weight')
+        if not os.path.exists(save_directory):
+            os.makedirs(save_directory)
+        torch.save(self.q1.state_dict(), os.path.join(save_directory, f'q1_{step}.pth'))
+        torch.save(self.q2.state_dict(), os.path.join(save_directory, f'q2_{step}.pth'))
+        torch.save(self.q1_target.state_dict(), os.path.join(save_directory, f'q1_target_{step}.pth'))
+        torch.save(self.q2_target.state_dict(), os.path.join(save_directory, f'q2_target_{step}.pth'))
+        torch.save(self.pi.state_dict(), os.path.join(save_directory, f'pi_{step}.pth'))
+        torch.save(self.pi_target.state_dict(), os.path.join(save_directory, f'pi_target_{step}.pth'))
+        with open(os.path.join(save_directory, f'replaybuffer_{step}.p'), 'wb') as file:
+            #for data in self.buffer_size:
+            pickle.dump(self._memory._buffer, file)

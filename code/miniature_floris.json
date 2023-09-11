@@ -1,0 +1,113 @@
+{
+  "type": "floris_input",
+  "name": "floris_input_file_Example",
+  "description": "FLORIS Input file for the action representation experiment",
+  "floris_version": "v2.0.0",
+  "logging": {
+    "console": {
+      "enable": true,
+      "level": "INFO"
+    },
+    "file": {
+      "enable": false,
+      "level": "INFO"
+    }
+  },
+  "farm": {
+    "type": "farm",
+    "name": "farm_example_2x2",
+    "description": "Example 2x2 Wind Farm",
+    "properties": {
+      "wind_speed": [
+        6.0
+      ],
+      "wind_direction": [
+        270.0
+      ],
+      "turbulence_intensity": [
+        0.1200284
+      ],
+      "wind_shear": 0.009393269,
+      "specified_wind_height": 100.0,
+      "wind_veer": -0.0253047,
+      "air_density": 1.225,
+      "layout_x": [
+        0.0
+      ],
+      "layout_y": [
+        0.0
+      ],
+      "wind_x": [
+        0
+      ],
+      "wind_y": [
+        0
+      ]
+    }
+  },
+  "turbine": {
+    "type": "turbine",
+    "name": "miniature_turbine",
+    "description": "miniature wind turbine",
+    "properties": {
+      "use_points_on_perimeter": false,
+      "rotor_diameter": 0.225,
+      "hub_height": 0.375,
+      "blade_count": 3,
+      "pP": 1.88,
+      "pT": 1.88,
+      "generator_efficiency": 1.0,
+      "power_thrust_table": {
+        "power": [
+          0.33,
+          0.34,
+          0.35,
+          0.36,
+          0.37,
+          0.38,
+          0.39,
+          0.40,
+          0.39
+        ],
+        "thrust": [
+          0.45,
+          0.445,
+          0.44,
+          0.435,
+          0.435,
+          0.435,
+          0.435,
+          0.435,
+          0.435
+        ],
+        "wind_speed": [
+          4.0,
+          4.5,
+          5.0,
+          5.5,
+          6.0,
+          6.5,
+          7.0,
+          7.5,
+          8.0
+        ]
+      },
+      "blade_pitch": 0.0,
+      "yaw_angle": 0.0,
+      "tilt_angle": 0.0,
+      "TSR": 4.0
+    }
+  },
+  "wake": {
+    "type": "wake",
+    "name": "wake_gauss",
+    "description": "wake",
+    "properties": {
+      "velocity_model": "gauss",
+      "turbulence_model": "crespo_hernandez",
+      "deflection_model": "gauss",
+      "combination_model": "sosfs"
+
+  }
+}
+}
